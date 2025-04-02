@@ -1,36 +1,74 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Next.js Image Gallery on AWS ECS
 
-## Getting Started
+## Overview
+This project is a **Next.js-based image gallery** that fetches images from an **AWS API Gateway endpoint** and displays them in an attractive frontend. The application is containerized using **Docker**, stored in **Amazon ECR**, and deployed to **AWS ECS** for scalable hosting.
 
-First, run the development server:
+## Features
+- Fetches images from an API Gateway URL
+- Displays images in a responsive gallery
+- Deployed on AWS ECS using a containerized Next.js app
+- Uses Amazon ECR for container storage
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Architecture
+1. **Frontend**: Next.js application
+2. **Backend**: AWS API Gateway serves image URLs
+3. **Containerization**: Dockerized Next.js app stored in Amazon ECR
+4. **Hosting**: ECS Fargate for scalable and serverless deployment
+
+## Prerequisites
+Before deploying, ensure you have:
+- AWS Account
+- AWS CLI installed and configured
+- Docker installed
+- A Next.js project ready to be containerized
+- API Gateway endpoint for fetching images
+
+## Deployment Steps
+### 1. Containerizing the Next.js App
+```sh
+# Build the Next.js project
+npm run build
+
+# Create a Docker image
+docker build -t nextjs-image-gallery .
+
+# Authenticate Docker with ECR
+aws ecr get-login-password --region <your-region> | docker login --username AWS --password-stdin <aws_account_id>.dkr.ecr.<your-region>.amazonaws.com
+
+# Tag the Docker image
+docker tag nextjs-image-gallery:latest <aws_account_id>.dkr.ecr.<your-region>.amazonaws.com/nextjs-image-gallery:latest
+
+# Push to ECR
+docker push <aws_account_id>.dkr.ecr.<your-region>.amazonaws.com/nextjs-image-gallery:latest
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Deploying to ECS via AWS Console
+1. Go to **ECS Console** → **Create a Cluster** → Select **Fargate**.
+2. Create a **Task Definition** with:
+   - Task Role: `ecsTaskExecutionRole` (with ECR access)
+   - Container Image: `ECR image URL`
+   - Port Mapping: `3000:3000`
+3. Create an **ECS Service** under your cluster:
+   - Set Task Definition
+   - Desired tasks: `1` (or more for scaling)
+   - Configure Load Balancer if needed
+4. Deploy the service and test the application.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## Configuration
+- **API Gateway URL**: Update `NEXT_PUBLIC_API_URL` in `.env.local`.
+```env
+NEXT_PUBLIC_API_URL=https://px893gsmql.execute-api.us-east-1.amazonaws.com/images
+```
+- **Port Configuration**: Ensure `EXPOSE 3000` is set in `Dockerfile`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Future Enhancements
+- Implement CI/CD pipeline with AWS CodePipeline
+- Add caching mechanism for faster image loading
+- Use AWS CloudFront for global content delivery
 
-## Learn More
+## Author
+**Pravesh Sudha** - [praveshsudha.com](https://praveshsudha.com)
 
-To learn more about Next.js, take a look at the following resources:
+## License
+This project is licensed under the MIT License.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
