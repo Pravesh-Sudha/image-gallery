@@ -11,7 +11,7 @@ const Gallery = () => {
   useEffect(() => {
     const fetchImages = async () => {
       try {
-        const response = await axios.get('<YOUR-API-Gateway-URL>/images');
+        const response = await axios.get(process.env.API_GATEWAY_URL);
         setImages(response.data);
         setLoading(false);
       } catch (error) {
